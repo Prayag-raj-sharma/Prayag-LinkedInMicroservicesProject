@@ -1,5 +1,6 @@
 package com.prayagrajsharma.linkedInProject.postsService.service;
 
+import com.prayagrajsharma.linkedInProject.postsService.auth.AuthContextHolder;
 import com.prayagrajsharma.linkedInProject.postsService.dto.PostCreateRequestDto;
 import com.prayagrajsharma.linkedInProject.postsService.dto.PostDto;
 import com.prayagrajsharma.linkedInProject.postsService.entity.Post;
@@ -32,6 +33,7 @@ public class PostService {
 
     public PostDto getPostById(Long postId) {
         log.info("Getting post for postId: {}", postId);
+        Long userId = AuthContextHolder.getCurrentUserId();
         Post post = postRepository.findById(postId)
                 .orElseThrow(() -> new ResourceNotFoundException("Post not found for postId: "+ postId));
         return modelMapper.map(post, PostDto.class);
