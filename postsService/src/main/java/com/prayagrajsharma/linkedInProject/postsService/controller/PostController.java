@@ -1,5 +1,6 @@
 package com.prayagrajsharma.linkedInProject.postsService.controller;
 
+import com.prayagrajsharma.linkedInProject.postsService.auth.AuthContextHolder;
 import com.prayagrajsharma.linkedInProject.postsService.dto.PostCreateRequestDto;
 import com.prayagrajsharma.linkedInProject.postsService.dto.PostDto;
 import com.prayagrajsharma.linkedInProject.postsService.service.PostService;
@@ -25,6 +26,7 @@ public class PostController {
 
     @GetMapping("/{postId}")
     private ResponseEntity<PostDto> getPost(@PathVariable Long postId) {
+        Long userId = AuthContextHolder.getCurrentUserId();
         PostDto postDto = postService.getPostById(postId);
         return ResponseEntity.ok(postDto);
 
