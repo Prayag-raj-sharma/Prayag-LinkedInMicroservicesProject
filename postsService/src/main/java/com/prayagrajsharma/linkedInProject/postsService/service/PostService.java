@@ -1,14 +1,18 @@
 package com.prayagrajsharma.linkedInProject.postsService.service;
 
 import com.prayagrajsharma.linkedInProject.postsService.auth.AuthContextHolder;
+import com.prayagrajsharma.linkedInProject.postsService.client.ConnectionsServiceClient;
+import com.prayagrajsharma.linkedInProject.postsService.dto.PersonDto;
 import com.prayagrajsharma.linkedInProject.postsService.dto.PostCreateRequestDto;
 import com.prayagrajsharma.linkedInProject.postsService.dto.PostDto;
 import com.prayagrajsharma.linkedInProject.postsService.entity.Post;
+import com.prayagrajsharma.linkedInProject.postsService.event.PostCreated;
 import com.prayagrajsharma.linkedInProject.postsService.exception.ResourceNotFoundException;
 import com.prayagrajsharma.linkedInProject.postsService.repository.PostRepository;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
+import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -21,6 +25,8 @@ public class PostService {
 
     private final PostRepository postRepository;
     private final ModelMapper modelMapper;
+    private final ConnectionsServiceClient connectionsServiceClient;
+    private final KafkaTemplate<Long, PostCreated> postCreatedKafkaTemplate;
 
 
     public PostDto createPost(PostCreateRequestDto postCreateRequestDto, Long userId) {
@@ -28,6 +34,19 @@ public class PostService {
         Post post = modelMapper.map(postCreateRequestDto, Post.class);
         post.setUserId(userId);
         postRepository.save(post);
+
+        List<PersonDto> personDtoList = connectionsServiceClient.firstDegreeConnections(userId);
+
+        // Send notification to connections
+        for(PersonDto person: personDtoList) {
+            PostCreated postCreated = PostCreated.builder()
+                    .ownerUserId(userId)
+                    .postId(post.getId())
+                    .userId(person.getUserId())
+                    .content(post.getContent())
+                    .build();
+            postCreatedKafkaTemplate.send("post_created_topic", postCreated);
+        }
         return modelMapper.map(post, PostDto.class);
     }
 
