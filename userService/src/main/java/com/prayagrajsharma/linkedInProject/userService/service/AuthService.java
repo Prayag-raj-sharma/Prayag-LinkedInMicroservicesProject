@@ -4,12 +4,14 @@ import com.prayagrajsharma.linkedInProject.userService.dto.LoginRequestDto;
 import com.prayagrajsharma.linkedInProject.userService.dto.SignUpRequestDto;
 import com.prayagrajsharma.linkedInProject.userService.dto.UserDto;
 import com.prayagrajsharma.linkedInProject.userService.entity.User;
+import com.prayagrajsharma.linkedInProject.userService.event.UserCreatedEvent;
 import com.prayagrajsharma.linkedInProject.userService.exception.BadRequestException;
 import com.prayagrajsharma.linkedInProject.userService.repository.UserRepository;
 import com.prayagrajsharma.linkedInProject.userService.utils.BCrypt;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
+import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -20,6 +22,7 @@ public class AuthService {
     private final UserRepository userRepository;
     private final ModelMapper modelMapper;
     private final JwtService jwtService;
+    private final KafkaTemplate<Long, UserCreatedEvent> userCreatedEventKafkaTemplate;
 
     public UserDto signUp(SignUpRequestDto signUpRequestDto) {
         log.info("Signup a user with email: {}", signUpRequestDto.getEmail());
@@ -31,6 +34,13 @@ public class AuthService {
         User user = modelMapper.map(signUpRequestDto, User.class);
         user.setPassword(BCrypt.hash(signUpRequestDto.getPassword()));
         user = userRepository.save(user);
+
+        UserCreatedEvent userCreatedEvent = UserCreatedEvent.builder()
+                .userId(user.getId())
+                .name(user.getName())
+                .build();
+
+        userCreatedEventKafkaTemplate.send("user-created_topic", userCreatedEvent);
         return modelMapper.map(user, UserDto.class);
     }
 

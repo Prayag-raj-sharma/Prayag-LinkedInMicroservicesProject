@@ -6,22 +6,15 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
-
 @Service
 @Slf4j
 @RequiredArgsConstructor
-public class ConnectionsService {
+public class PersonService {
 
     private final PersonRepository personRepository;
 
-    public List<Person> getFirstDegreeConnectionsOfUser(Long userId) {
-        log.info("Fetching the first degree connection of user with userId: {}", userId);
-
-        return personRepository.getFirstDegreeConnections(userId);
-    }
-
-    public void sendConnectionRequest(Long userId) {
-        log.info("Sending connection request to a user with userId: {}", userId);
+    public void createPerson(Long userId, String name) {
+        Person person = Person.builder().userId(userId).name(name).build();
+        personRepository.save(person);
     }
 }
