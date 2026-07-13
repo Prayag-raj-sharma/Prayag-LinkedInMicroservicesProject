@@ -4,10 +4,7 @@ import com.prayagrajsharma.linkedInProject.connectionsService.entity.Person;
 import com.prayagrajsharma.linkedInProject.connectionsService.service.ConnectionsService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -22,6 +19,13 @@ public class ConnectionsController {
     public ResponseEntity<List<Person>> getFirstDegreeConnections(@PathVariable Long userId) {
         List<Person> personList = connectionsService.getFirstDegreeConnectionsOfUser(userId);
         return ResponseEntity.ok(personList);
+    }
+
+    @PostMapping
+    public ResponseEntity<Void> sendConnectionRequest(@PathVariable Long userId) {
+        connectionsService.sendConnectionRequest(userId);
+        return ResponseEntity.noContent().build();
+
     }
 
 

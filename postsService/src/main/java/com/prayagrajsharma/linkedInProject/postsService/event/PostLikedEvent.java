@@ -5,7 +5,8 @@ import lombok.Data;
 
 @Data
 @Builder
-public class PostLiked {
+public class PostLikedEvent {
     private Long postId;
+    private Long ownerUserId;
     private Long likedByUserId;
 }
